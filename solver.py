@@ -22,10 +22,15 @@ def add_str_if_not_there(str, list):
         return False
     
 def check_terms():
-    if strptime(date, "%Y-%m-%d") > max_date:
+    if date >= max_date:
         return 0
-    if strptime(date, "%Y-%m-%d") < min_date:
+    if date <= min_date:
         return 0
+    for term in right_terms:
+        for char in term:
+            if char == '0':
+                if str(date) not in right_terms:
+                    return 0
     if "Jungle" in right_terms or "Top" in right_terms or "Middle" in right_terms or "Bottom" in right_terms or "Support" in right_terms:
         for pos in positions:
             if pos not in right_terms:
@@ -111,9 +116,11 @@ right_terms = []
 
 before_dates = []
 after_dates = []
-max_date = strptime("2050-01-01", "%Y-%m-%d")
-min_date = strptime("1000-01-01", "%Y-%m-%d")
+max_date = 3000
+min_date = 1000
 
+inferior = 0
+superior = 0
 
 first_run = True
 # main for loop
@@ -125,13 +132,15 @@ random.shuffle(champs)
 for champ in champs:
     score = 0
     name = champ["championName"]
+    if name == "Tristana":
+        print("poggers")
     gender = champ["gender"]
     positions = champ["positions"]
     specieses = champ["species"]
     resource = champ["resource"]
     ranges = champ["range_type"]
     regions = champ["regions"]
-    date = champ["release_date"]
+    date = int(champ["release_date"])
 
     # big ass check against known terms
     if not first_run:
@@ -156,7 +165,7 @@ for champ in champs:
     green_squares = driver.find_elements(By.CLASS_NAME, 'square-good')
     partial_squares = driver.find_elements(By.CLASS_NAME, 'square-partial')
     inferior_squares = driver.find_elements(By.CLASS_NAME, 'square-inferior')
-    superior_squares = driver.find_elements(By.CLASS_NAME, 'superior-inferior') #guessing here for now
+    superior_squares = driver.find_elements(By.CLASS_NAME, 'square-superior') #guessing here for now
 
     # handling wrong terms
     for square in red_squares:
@@ -179,18 +188,25 @@ for champ in champs:
             add_str_if_not_there(square.text, right_terms)
 
     # handling too recent of dates
-    for square in inferior_squares:
-        date = champ["release_date"]
-        date = strptime(date, "%Y-%m-%d")
-        if date < max_date:
-            max_date = date
-
-    # handling too old of dates
-    for square in superior_squares:
-        date = champ["release_date"]
-        date = strptime(date, "%Y-%m-%d")
+    if len(superior_squares) > superior:
         if date > min_date:
             min_date = date
+            print("min date", min_date)
+        superior += 1
+
+    # handling too old of dates
+    if len(inferior_squares) > inferior:
+        if date < max_date:
+            max_date = date
+            print("max date", max_date)
+        inferior += 1
+
+
+    # # handling partial terms
+    # for square in partial_squares:
+    #     if not " " in square.text and not "\n" in square.text and not "," in square.text:
+    #         add_str_if_not_there(square.text, right_terms)
+
 
     first_run = False
     print("wrong: ", wrong_terms)
