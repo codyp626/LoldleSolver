@@ -10,9 +10,34 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.common.exceptions import ElementNotInteractableException
 from selenium.common.exceptions import WebDriverException
-
 import json
+import sys
+import time
 
+
+global_gender_list = ["Male", "Female", "Other"]
+global_positions_list = ["Jungle", "Top", "Middle", "Bottom", "Support"]
+global_species_list = ["Minotaur", "Unknown", "Brackern", "Cat", "Troll", "Human", "Revenant", "Undead", "Yordle", "Dragon", "Magically Altered", "Vastayan", "Spiritualist", "Spirit", "God", "Golem", "Demon", "Iceborn", "Magicborn", "Celestial", "Chemically Altered", "Void-Being", "Aspect", "Cyborg", "Rat", "Darkin", "God-Warrior"]
+global_resource_list = ["Fury", "Ferocity", "Shield", "Heat", "Grit", "Bloodthirst", "Mana", "Manaless", "Flow", "Energy", "Rage", "Courage", "Health costs"]
+global_range_list = ["Ranged", "Melee"]
+global_region_list = ["Void", "Icathia", "Ixtal", "Demacia", "Camavor", "Rhaast", "Bilgewater", "Ionia", "Targon", "Noxus", "Runeterra", "Bandle City", "Blessed Isles", "Shadow Isles", "Zaun", "Piltover", "Freljord", "Shurima"]
+global_years_list = [2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022]
+
+global_right_terms = [None]
+
+list_list = [global_gender_list, global_positions_list, global_species_list, global_resource_list, global_range_list, global_region_list]
+class champ:
+    def __init__(self, name, gender, positions, species_list, resource, range, regions, year):
+        self.name = name
+        self.gender = gender
+        self.positions = positions
+        self.species_list = species_list
+        self.resource = resource
+        self.range = range
+        self.regions = regions
+        self.year = year
+
+default_correct_champ = champ(None, global_gender_list, global_positions_list, global_species_list, global_resource_list, global_range_list, global_region_list, global_years_list)
 
 def add_str_if_not_there(str, list):
     if str not in list:
@@ -20,199 +45,163 @@ def add_str_if_not_there(str, list):
        return True
     else:
         return False
-    
-def check_terms():
-    if date >= max_date:
-        return 0
-    if date <= min_date:
-        return 0
-    for term in right_terms:
-        for char in term:
-            if char == '0':
-                if str(date) not in right_terms:
-                    return 0
-    if "Jungle" in right_terms or "Top" in right_terms or "Middle" in right_terms or "Bottom" in right_terms or "Support" in right_terms:
-        for pos in positions:
-            if pos not in right_terms:
-                return 0
-    if "Human" in right_terms or "Revenant" in right_terms or "Undead" in right_terms or "Yordle" in right_terms or "Dragon" in right_terms or "Magically Altered" in right_terms or "Vastayan" in right_terms or "Spiritualist" in right_terms or "Spirit" in right_terms or "God" in right_terms or "Golem" in right_terms or "Demon" in right_terms or "Iceborn" in right_terms or "Magicborn" in right_terms or "Celestial" in right_terms or "Chemically Altered" in right_terms or "Void-Being" in right_terms or "Aspect" in right_terms or "Cyborg" in right_terms or "Rat" in right_terms or "Darkin" in right_terms or "God-Warrior" in right_terms:
-        for species in specieses:
-            if species not in right_terms:
-                return 0
-    if "Female" in right_terms or "Male" in right_terms or "Other" in right_terms:
-        if gender not in right_terms:
-            return 0
-    if "Ranged" in right_terms or "Melee" in right_terms:
-        for range in ranges:
-            if range not in right_terms:
-                return 0
-    if "Mana" in right_terms or "Manaless" in right_terms or "Flow" in right_terms or "Energy" in right_terms or "Rage" in right_terms or "Courage" in right_terms:
-        if resource not in right_terms:
-            return 0
-    if "Runeterra" in right_terms or "Bandle City" in right_terms or "Shadow Isles" in right_terms or "Zaun" in right_terms or "Piltover" in right_terms:
-        for region in regions:
-            if region not in right_terms:
-                return 0
-    
-    # status = 1
-    if gender in wrong_terms:
-        return 0
-    for pos in positions:
-        if pos in wrong_terms:
-            return 0
-    for species in specieses:
-        if species in wrong_terms:
-            return 0
-    if resource in wrong_terms:
-        return 0
-    for range in ranges:
-        if range in wrong_terms:
-            return 0
-    for region in regions:
-        if region in wrong_terms:
-            return 0
-    # if gender in right_terms:
-    #     status = 1
-    # for pos in positions:
-    #     if pos in right_terms:
-    #         status = 1
-    # for species in specieses:
-    #     if species in right_terms:
-    #         status = 1
-    # if resource in right_terms:
-    #     status = 1
-    # for range in ranges:
-    #     if range in right_terms:
-    #         status = 1
-    # return status
 
-    # not in wrong terms
-    # or in right terms
-    # 
+
+
+
+def specify_terms(item, term_type, single):
+    # this cleans up wrong term boxes
+    if term_type == "wrong":
+        for list in list_list:
+            if item in list:
+                list.remove(item)
+    if term_type == "right" and single == True:
+        for list in list_list:
+            if item in list:
+                list.clear()
+                list.append(item)
+    return
+
+
+
+# function returns 1 if champ matches, 0 otherwise
+def check_champ_against_terms(champ, max_date, min_date):
+    if not champ["gender"] in global_gender_list:
+        return 0
+    for pos in champ["positions"]:
+        if not pos in global_positions_list:
+            return 0
+    for species in champ["species"]:
+        if not species in global_species_list:
+            return 0
+    if not champ["resource"] in global_resource_list:
+        return 0
+    for range in champ["range_type"]:
+        if not range in global_range_list:
+            return 0
+    for region in champ["regions"]:
+        if not region in global_region_list:
+            return 0
+    if int(champ["release_date"]) > max_date:
+        return 0
+    if int(champ["release_date"]) < min_date:
+        return 0
     return 1
 
-
-with open('champinfo.json') as f:
+start = time.time()
+def main():
+    guesses = 0
+    max_date = 3000
+    min_date = 0
+    f = open('champinfo.json')
     champs = json.load(f)
+    #web driver setup
+    from selenium.webdriver.common.by import By
+    options = webdriver.ChromeOptions()
+    # options.add_argument("--headless")
+    options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    driver = webdriver.Chrome(options=options, service=Service(ChromeDriverManager().install()))
+    driver.set_window_size(1920, 1080)
+    driver.get("http://www.loldle.net")
 
+    #click the 'classic mode' button
+    button = driver.find_element(By.CLASS_NAME, "button-img")
+    button.click()
+    sleep(1)
 
-#web driver setup
-from selenium.webdriver.common.by import By
-options = webdriver.ChromeOptions()
-options.add_experimental_option('excludeSwitches', ['enable-logging'])
-driver = webdriver.Chrome(options=options, service=Service(ChromeDriverManager().install()))
-driver.get("http://www.loldle.net")
+    ignored_exceptions=(NoSuchElementException,StaleElementReferenceException,ElementNotInteractableException,WebDriverException)
+    first_run = True
+    # main for loop
 
-#click the 'classic mode' button
-button = driver.find_element(By.CLASS_NAME, "button-img")
-button.click()
-sleep(1)
+    # for champ in champs:
+    #     # for species in champ["resource"]:
+    #     if not champ["resource"] in global_resource_list:
+    #         print("Missing:", champ["resource"])
+    # return
 
-ignored_exceptions=(NoSuchElementException,StaleElementReferenceException,ElementNotInteractableException,WebDriverException)
-
-# huge strings list
-wrong_terms = []
-right_terms = []
-
-before_dates = []
-after_dates = []
-max_date = 3000
-min_date = 1000
-
-inferior = 0
-superior = 0
-
-first_run = True
-# main for loop
-
-specieslist = []
-
-
-random.shuffle(champs)
-for champ in champs:
-    score = 0
-    name = champ["championName"]
-    if name == "Tristana":
-        print("poggers")
-    gender = champ["gender"]
-    positions = champ["positions"]
-    specieses = champ["species"]
-    resource = champ["resource"]
-    ranges = champ["range_type"]
-    regions = champ["regions"]
-    date = int(champ["release_date"])
-
-    # big ass check against known terms
-    if not first_run:
-        if not check_terms():
+    inferior = 0
+    superior = 0
+    random.shuffle(champs)
+    for champ in champs:
+        name = champ["championName"]
+        date = int(champ["release_date"])
+        # print("trying", name)
+        # check against known terms
+        if not first_run:
+            if not check_champ_against_terms(champ, max_date, min_date):
+                continue
+        # print("champ passed")
+        # typing champ name
+        try:
+            textbox = driver.find_element(By.XPATH, "//input[@placeholder=\"Type champion name ...\"]")
+        except ignored_exceptions as Exception:
+            continue
+        try:
+            textbox.send_keys(name)
+            textbox.send_keys(Keys.RETURN)
+            guesses += 1
+        except ignored_exceptions as Exception:
             continue
 
-    # typing champ name
-    try:
-        textbox = driver.find_element(By.XPATH, "//input[@placeholder=\"Type champion name ...\"]")
-    except ignored_exceptions as Exception:
-        continue
-    try:
-        textbox.send_keys(name)
-        textbox.send_keys(Keys.RETURN)
-    except ignored_exceptions as Exception:
-        continue
+        sleep(4) # wait for squares to be revealed
 
-    sleep(4) # wait for squares to be revealed
+        #find and categorize all squares
+        red_squares = driver.find_elements(By.CLASS_NAME, 'square-bad')
+        green_squares = driver.find_elements(By.CLASS_NAME, 'square-good')
+        partial_squares = driver.find_elements(By.CLASS_NAME, 'square-partial')
+        inferior_squares = driver.find_elements(By.CLASS_NAME, 'square-inferior')
+        superior_squares = driver.find_elements(By.CLASS_NAME, 'square-superior') #guessing here for now
 
-    #find and categorize all squares
-    red_squares = driver.find_elements(By.CLASS_NAME, 'square-bad')
-    green_squares = driver.find_elements(By.CLASS_NAME, 'square-good')
-    partial_squares = driver.find_elements(By.CLASS_NAME, 'square-partial')
-    inferior_squares = driver.find_elements(By.CLASS_NAME, 'square-inferior')
-    superior_squares = driver.find_elements(By.CLASS_NAME, 'square-superior') #guessing here for now
+        # handling wrong terms
+        for square in red_squares:
+            if "\n" in square.text:
+                split_list = square.text.split("\n")
+                for x in split_list:
+                    x = x.replace(',', "")
+                    specify_terms(x, "wrong", False)
+                    
+                    
+            else:
+                specify_terms(square.text, "wrong", False)
 
-    # handling wrong terms
-    for square in red_squares:
-        if "\n" in square.text:
-            split_list = square.text.split("\n")
-            for x in split_list:
-                x = x.replace(',', "")
-                add_str_if_not_there(x, wrong_terms)
-        else:
-             add_str_if_not_there(square.text, wrong_terms)
+        # handling right terms
+        for square in green_squares:
+            if "\n" in square.text:
+                split_list = square.text.split("\n")
+                for x in split_list:
+                    x = x.replace(',', "")
+                    specify_terms(x, "right", False)
+            else :
+                specify_terms(square.text, "right", True)
 
-    # handling right terms
-    for square in green_squares:
-        if "\n" in square.text:
-            split_list = square.text.split("\n")
-            for x in split_list:
-                x = x.replace(',', "")
-                add_str_if_not_there(x, right_terms)
-        else :
-            add_str_if_not_there(square.text, right_terms)
+        # handling too recent of dates
+        if len(superior_squares) > superior:
+            if date > min_date:
+                min_date = date
+                # print("min date", min_date)
+            superior += 1
 
-    # handling too recent of dates
-    if len(superior_squares) > superior:
-        if date > min_date:
-            min_date = date
-            print("min date", min_date)
-        superior += 1
+        # handling too old of dates
+        if len(inferior_squares) > inferior:
+            if date < max_date:
+                max_date = date
+                # print("max date", max_date)
+            inferior += 1
 
-    # handling too old of dates
-    if len(inferior_squares) > inferior:
-        if date < max_date:
-            max_date = date
-            print("max date", max_date)
-        inferior += 1
+        # # handling partial terms
+        # for square in partial_squares:
+        #     if not " " in square.text and not "\n" in square.text and not "," in square.text:
+        #         add_str_if_not_there(square.text, right_terms)
 
 
-    # # handling partial terms
-    # for square in partial_squares:
-    #     if not " " in square.text and not "\n" in square.text and not "," in square.text:
-    #         add_str_if_not_there(square.text, right_terms)
+        first_run = False
+    print("Won in\t",guesses,"\tguesses")
+    driver.close()
+    # end = start - time.time()
 
+    f.close()
 
-    first_run = False
-    print("wrong: ", wrong_terms)
-    print("right: ", right_terms, "\n")
-# wait 40 seconds
-print("you win!")
-sleep(30)
-driver.close()
-exit()
+    return
+
+if __name__ == '__main__':
+    sys.exit(main())  
